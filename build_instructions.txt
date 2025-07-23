@@ -1,5 +1,10 @@
 rm dist/*
+
+Update the version number in pyproject.toml
+
 python -m build
+
+# to upload to testpypi
 python -m twine upload --repository testpypi dist/*
 
 # to upload to main pypi repo:

@@ -146,6 +146,7 @@ src/mavspy/data/scenes/meshes/surfaces/road_surfaces/Road-2-Lane-X.obj
 src/mavspy/data/scenes/meshes/urban/road_signs/stop_sign.mtl
 src/mavspy/data/scenes/meshes/urban/road_signs/stop_sign.obj
 src/mavspy/data/scenes/meshes/urban/road_signs/stop_sign_texture.bmp
+src/mavspy/data/scenes/meshes/urban/road_signs/yield_sign.mtl
 src/mavspy/data/scenes/meshes/urban/road_signs/yield_sign.obj
 src/mavspy/data/scenes/meshes/urban/road_signs/yieldsign_diffuse.bmp
 src/mavspy/data/scenes/meshes/urban/road_signs/yieldsign_normal.bmp

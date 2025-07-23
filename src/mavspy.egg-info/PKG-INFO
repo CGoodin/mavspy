@@ -1,6 +1,6 @@
-Metadata-Version: 2.1
+Metadata-Version: 2.2
 Name: mavspy
-Version: 1.0.1
+Version: 1.0.5
 Summary: The MSU Autonomous Vehicle Simulator
 Author-email: Chris Goodin <cgoodin@cavs.msstate.edu>
 Classifier: Programming Language :: Python :: 3
