@@ -31,7 +31,7 @@ jobs:
       - name: Checkout mavs source
         uses: actions/checkout@v4
         with:
-          repository: CGoodin/mavs
+          repository: Mississippi-State-University-OTM/MAVS
           submodules: recursive
           path: mavs-src
 
