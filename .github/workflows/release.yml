@@ -49,6 +49,7 @@ jobs:
       - name: Configure MAVS
         run: >
           cmake -S mavs-src -B mavs-build
+          -DCMAKE_POLICY_VERSION_MINIMUM=3.5
           -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/mavs-install
           -DMAVS_USE_EMBREE=ON
