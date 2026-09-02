@@ -2,6 +2,7 @@ LICENSE
 MANIFEST.in
 README.md
 pyproject.toml
+setup.py
 src/mavspy/__init__.py
 src/mavspy/mavs.py
 src/mavspy/mavs_lib_loader.py

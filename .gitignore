@@ -1,1 +1,3 @@
 dist/mavspy*
+build/
+mavs_config.txt

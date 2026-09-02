@@ -1,0 +1,112 @@
+name: Build and release wheels
+
+# Push a tag like v1.0.7 to build MAVS from source on Windows and Linux,
+# bundle the resulting mavs.dll/libmavs.so (+ embree) into the mavspy
+# package, and attach both wheels to a new GitHub Release. Version comes
+# from the tag itself, so pyproject.toml no longer needs a manual bump.
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            platform: windows
+          - os: ubuntu-latest
+            platform: linux
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout mavspy
+        uses: actions/checkout@v4
+
+      - name: Checkout mavs source
+        uses: actions/checkout@v4
+        with:
+          repository: CGoodin/mavs
+          submodules: recursive
+          path: mavs-src
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install Linux build dependencies
+        if: matrix.platform == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libx11-dev libjpeg-dev
+
+      - name: Configure MAVS
+        run: >
+          cmake -S mavs-src -B mavs-build
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/mavs-install
+          -DMAVS_USE_EMBREE=ON
+          -DMAVS_USE_OMP=ON
+          -DMAVS_USE_MPI=OFF
+          -DMAVS_USE_CHRONO=OFF
+          -DBUILD_TESTING=OFF
+
+      - name: Build and install MAVS
+        run: cmake --build mavs-build --config Release --target install --parallel
+
+      - name: Copy native libraries into mavspy package (Windows)
+        if: matrix.platform == 'windows'
+        shell: bash
+        run: |
+          mkdir -p src/mavspy/lib
+          cp mavs-install/bin/mavs.dll src/mavspy/lib/
+          cp mavs-install/bin/embree3.dll src/mavspy/lib/
+
+      - name: Copy native libraries into mavspy package (Linux)
+        if: matrix.platform == 'linux'
+        run: |
+          mkdir -p src/mavspy/lib
+          cp mavs-install/lib/libmavs.so src/mavspy/lib/
+          cp mavs-install/lib/libembree3.so* src/mavspy/lib/
+
+      - name: Set package version from tag
+        shell: bash
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          sed -i.bak "s/^version = .*/version = \"${version}\"/" pyproject.toml
+          rm -f pyproject.toml.bak
+
+      - name: Build wheel
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip build
+          python -m build --wheel
+
+      - name: Upload wheel artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mavspy-wheel-${{ matrix.platform }}
+          path: dist/*.whl
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all wheel artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          pattern: mavspy-wheel-*
+          merge-multiple: true
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.whl
+          generate_release_notes: true
