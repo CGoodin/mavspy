@@ -47,6 +47,7 @@ jobs:
           sudo apt-get install -y libx11-dev libjpeg-dev
 
       - name: Configure MAVS
+        shell: bash
         run: >
           cmake -S mavs-src -B mavs-build
           -DCMAKE_POLICY_VERSION_MINIMUM=3.5
@@ -59,6 +60,7 @@ jobs:
           -DBUILD_TESTING=OFF
 
       - name: Build and install MAVS
+        shell: bash
         run: cmake --build mavs-build --config Release --target install --parallel
 
       - name: Copy native libraries into mavspy package (Windows)
