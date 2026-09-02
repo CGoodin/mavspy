@@ -46,6 +46,17 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libx11-dev libjpeg-dev
 
+      - name: Add swap space (Linux)
+        # Standard ubuntu-latest runners have 2 cores / 7GB RAM. Building
+        # Embree's SIMD kernel variants (SSE4.2/AVX/AVX2) in parallel is
+        # memory-hungry enough to OOM at that size without this.
+        if: matrix.platform == 'linux'
+        run: |
+          sudo fallocate -l 4G /swapfile
+          sudo chmod 600 /swapfile
+          sudo mkswap /swapfile
+          sudo swapon /swapfile
+
       - name: Patch vendored CMake policy incompatible with modern CMake
         shell: bash
         run: sed -i '/cmake_policy(SET CMP0063 OLD)/d' mavs-src/extern/tinyxml2/CMakeLists.txt
