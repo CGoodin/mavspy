@@ -46,12 +46,20 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libx11-dev libjpeg-dev
 
+      - name: Patch vendored CMake policy incompatible with modern CMake
+        shell: bash
+        run: sed -i '/cmake_policy(SET CMP0063 OLD)/d' mavs-src/extern/tinyxml2/CMakeLists.txt
+
       - name: Configure MAVS
         shell: bash
         run: >
           cmake -S mavs-src -B mavs-build
           -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+          -DCMAKE_POLICY_DEFAULT_CMP0063=NEW
+          -DCMAKE_POLICY_FORCE_CMP0063=NEW
           -DCMAKE_BUILD_TYPE=Release
+          -DBUILD_SHARED_LIBS=ON
+          -DBUILD_STATIC_LIBS=ON
           -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/mavs-install
           -DMAVS_USE_EMBREE=ON
           -DMAVS_USE_OMP=ON
