@@ -49,13 +49,15 @@ jobs:
       - name: Add swap space (Linux)
         # Standard ubuntu-latest runners have 2 cores / 7GB RAM. Building
         # Embree's SIMD kernel variants (SSE4.2/AVX/AVX2) in parallel is
-        # memory-hungry enough to OOM at that size without this.
+        # memory-hungry enough to OOM at that size without this. Runner
+        # images already have their own active swap at /swapfile, so use a
+        # distinct path to avoid colliding with it.
         if: matrix.platform == 'linux'
         run: |
-          sudo fallocate -l 4G /swapfile
-          sudo chmod 600 /swapfile
-          sudo mkswap /swapfile
-          sudo swapon /swapfile
+          sudo fallocate -l 4G /extra-swapfile
+          sudo chmod 600 /extra-swapfile
+          sudo mkswap /extra-swapfile
+          sudo swapon /extra-swapfile
 
       - name: Patch vendored CMake policy incompatible with modern CMake
         shell: bash
