@@ -78,21 +78,30 @@ jobs:
           -DMAVS_USE_MPI=OFF
           -DMAVS_USE_CHRONO=OFF
           -DBUILD_TESTING=OFF
+          -DMAVS_BUILD_EXAMPLES=OFF
+          -DMAVS_BUILD_UTILITIES=OFF
 
-      - name: Build MAVS
-        # Build only the "mavs" target (what the wheel actually needs)
-        # rather than "--target install", which implicitly builds the
-        # entire default ALL_BUILD set first -- including every
-        # example/utility executable we don't need here. This also means we
-        # skip "cmake --install": examples/ and utilities/ each declare
-        # their own install(TARGETS ...) rules, which would fail since
-        # those executables were never built.
-        # Not using --parallel: reactphysics3d.lib was consistently missing
-        # at mavs's link step under parallel MSBuild, suggesting a build-
-        # order race (its own compile warnings show it was still building
-        # when mavs's linker ran) rather than a real compile error.
+      - name: Build MAVS (Linux)
+        # Building only the "mavs" target works correctly here: Make-
+        # generated builds resolve dependencies (e.g. reactphysics3d)
+        # correctly for any named target.
+        if: matrix.platform == 'linux'
         shell: bash
         run: cmake --build mavs-build --config Release --target mavs
+
+      - name: Build MAVS (Windows)
+        # Unlike Linux, "--target mavs" on the Visual Studio generator does
+        # not reliably pull in reactphysics3d as a dependency (confirmed:
+        # reactphysics3d.lib was missing at link time even without
+        # --parallel, so it isn't just a parallel build race). Building the
+        # default target instead is proven to build reactphysics3d
+        # correctly; MAVS_BUILD_EXAMPLES/UTILITIES=OFF above keeps that
+        # from also pulling in everything under examples/ and utilities/.
+        # Kept serial (no --parallel): that combination previously raced
+        # reactphysics3d's own build against consumers linking against it.
+        if: matrix.platform == 'windows'
+        shell: bash
+        run: cmake --build mavs-build --config Release
 
       - name: Copy native libraries into mavspy package (Windows)
         # Copied straight from the build tree by filename rather than a
