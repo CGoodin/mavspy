@@ -73,31 +73,39 @@ jobs:
           -DCMAKE_BUILD_TYPE=Release
           -DBUILD_SHARED_LIBS=ON
           -DBUILD_STATIC_LIBS=ON
-          -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/mavs-install
           -DMAVS_USE_EMBREE=ON
           -DMAVS_USE_OMP=ON
           -DMAVS_USE_MPI=OFF
           -DMAVS_USE_CHRONO=OFF
           -DBUILD_TESTING=OFF
 
-      - name: Build and install MAVS
+      - name: Build MAVS
+        # Build only the "mavs" target (what the wheel actually needs)
+        # rather than "--target install", which implicitly builds the
+        # entire default ALL_BUILD set first -- including every
+        # example/utility executable we don't need here. This also means we
+        # skip "cmake --install": examples/ and utilities/ each declare
+        # their own install(TARGETS ...) rules, which would fail since
+        # those executables were never built.
         shell: bash
-        run: cmake --build mavs-build --config Release --target install --parallel
+        run: cmake --build mavs-build --config Release --target mavs --parallel
 
       - name: Copy native libraries into mavspy package (Windows)
+        # Copied straight from the build tree by filename rather than a
+        # hardcoded path, since exact output layout depends on generator.
         if: matrix.platform == 'windows'
         shell: bash
         run: |
           mkdir -p src/mavspy/lib
-          cp mavs-install/bin/mavs.dll src/mavspy/lib/
-          cp mavs-install/bin/embree3.dll src/mavspy/lib/
+          find mavs-build -iname "mavs.dll" -exec cp {} src/mavspy/lib/ \;
+          find mavs-build -iname "embree3.dll" -exec cp {} src/mavspy/lib/ \;
 
       - name: Copy native libraries into mavspy package (Linux)
         if: matrix.platform == 'linux'
         run: |
           mkdir -p src/mavspy/lib
-          cp mavs-install/lib/libmavs.so src/mavspy/lib/
-          cp mavs-install/lib/libembree3.so* src/mavspy/lib/
+          find mavs-build -iname "libmavs.so" -exec cp {} src/mavspy/lib/ \;
+          find mavs-build -iname "libembree3.so*" -exec cp {} src/mavspy/lib/ \;
 
       - name: Set package version from tag
         shell: bash
