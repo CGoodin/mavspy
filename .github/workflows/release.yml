@@ -135,11 +135,25 @@ jobs:
           find mavs-build -iname "embree3.dll" -exec cp {} src/mavspy/lib/ \;
 
       - name: Copy native libraries into mavspy package (Linux)
+        # Bundle libmavs.so plus every non-core shared library it actually
+        # needs at runtime (discovered via ldd), not just embree. It links
+        # against the build machine's system libjpeg/libX11/etc, which
+        # aren't guaranteed to exist -- or exist under the same soname --
+        # on an arbitrary end-user's Linux distro. The excluded names below
+        # are core glibc/libstdc++ pieces safe to assume are always present.
         if: matrix.platform == 'linux'
         run: |
           mkdir -p src/mavspy/lib
-          find mavs-build -iname "libmavs.so" -exec cp {} src/mavspy/lib/ \;
-          find mavs-build -iname "libembree3.so*" -exec cp {} src/mavspy/lib/ \;
+          libmavs=$(find mavs-build -iname "libmavs.so" | head -1)
+          cp "$libmavs" src/mavspy/lib/
+          ldd "$libmavs" | awk '{print $3}' | grep '^/' | while read -r dep; do
+            case "$(basename "$dep")" in
+              libc.so*|libm.so*|libpthread.so*|libdl.so*|librt.so*|libgcc_s.so*|libstdc++.so*|ld-linux*.so*|libutil.so*)
+                ;;
+              *)
+                cp "$dep" src/mavspy/lib/ ;;
+            esac
+          done
 
       - name: Set package version from tag
         shell: bash
