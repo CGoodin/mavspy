@@ -87,8 +87,12 @@ jobs:
         # skip "cmake --install": examples/ and utilities/ each declare
         # their own install(TARGETS ...) rules, which would fail since
         # those executables were never built.
+        # Not using --parallel: reactphysics3d.lib was consistently missing
+        # at mavs's link step under parallel MSBuild, suggesting a build-
+        # order race (its own compile warnings show it was still building
+        # when mavs's linker ran) rather than a real compile error.
         shell: bash
-        run: cmake --build mavs-build --config Release --target mavs --parallel
+        run: cmake --build mavs-build --config Release --target mavs
 
       - name: Copy native libraries into mavspy package (Windows)
         # Copied straight from the build tree by filename rather than a
