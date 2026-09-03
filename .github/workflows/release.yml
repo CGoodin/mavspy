@@ -21,7 +21,7 @@ jobs:
         include:
           - os: windows-latest
             platform: windows
-          - os: ubuntu-22.04
+          - os: ubuntu-latest
             platform: linux
     runs-on: ${{ matrix.os }}
     steps:
@@ -40,12 +40,6 @@ jobs:
         with:
           python-version: "3.10"
 
-      - name: Install Linux build dependencies
-        if: matrix.platform == 'linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libx11-dev libjpeg-dev
-
       - name: Add swap space (Linux)
         # Standard ubuntu-latest runners have 2 cores / 7GB RAM. Building
         # Embree's SIMD kernel variants (SSE4.2/AVX/AVX2) in parallel is
@@ -63,10 +57,24 @@ jobs:
         shell: bash
         run: sed -i '/cmake_policy(SET CMP0063 OLD)/d' mavs-src/extern/tinyxml2/CMakeLists.txt
 
-      - name: Configure and build MAVS (Linux)
+      - name: Build MAVS and bundle native libraries (Linux)
+        # Built inside a manylinux_2_28 container (glibc 2.28 baseline)
+        # rather than directly on the ubuntu-latest host: a plain build on
+        # ubuntu-latest (glibc ~2.39) or even ubuntu-22.04 (2.35) produced a
+        # libmavs.so that refused to load on older-glibc target systems
+        # (confirmed: GLIBC_2.38, then GLIBC_2.35 not found errors against a
+        # glibc-2.34 test machine). manylinux images exist specifically to
+        # build binaries portable across Linux distros. The library-bundling
+        # (ldd-based, as before) has to happen inside this same container
+        # too, since the actual libjpeg/libX11 files it finds only exist
+        # here, not on the ubuntu host.
         if: matrix.platform == 'linux'
         shell: bash
         run: |
+          cat > build_linux.sh <<'SCRIPT'
+          set -ex
+          dnf install -y libX11-devel libjpeg-turbo-devel cmake gcc-c++ make
+
           cmake -S mavs-src -B mavs-build \
             -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
             -DCMAKE_POLICY_DEFAULT_CMP0063=NEW \
@@ -85,6 +93,22 @@ jobs:
           # generated builds resolve dependencies (e.g. reactphysics3d)
           # correctly for any named target.
           cmake --build mavs-build --config Release --target mavs
+
+          mkdir -p src/mavspy/lib
+          libmavs=$(find mavs-build -iname "libmavs.so" | head -1)
+          cp "$libmavs" src/mavspy/lib/
+          ldd "$libmavs" | awk '{print $3}' | grep '^/' | while read -r dep; do
+            case "$(basename "$dep")" in
+              libc.so*|libm.so*|libpthread.so*|libdl.so*|librt.so*|libgcc_s.so*|libstdc++.so*|ld-linux*.so*|libutil.so*)
+                ;;
+              *)
+                cp "$dep" src/mavspy/lib/ ;;
+            esac
+          done
+          SCRIPT
+          chmod +x build_linux.sh
+          docker run --rm -v "${{ github.workspace }}:/work" -w /work \
+            quay.io/pypa/manylinux_2_28_x86_64 bash /work/build_linux.sh
 
       - name: Configure and build MAVS (Windows)
         # ReactPhysics3D has a known Windows-only build-order issue: a
@@ -133,27 +157,6 @@ jobs:
           mkdir -p src/mavspy/lib
           find mavs-build -iname "mavs.dll" -exec cp {} src/mavspy/lib/ \;
           find mavs-build -iname "embree3.dll" -exec cp {} src/mavspy/lib/ \;
-
-      - name: Copy native libraries into mavspy package (Linux)
-        # Bundle libmavs.so plus every non-core shared library it actually
-        # needs at runtime (discovered via ldd), not just embree. It links
-        # against the build machine's system libjpeg/libX11/etc, which
-        # aren't guaranteed to exist -- or exist under the same soname --
-        # on an arbitrary end-user's Linux distro. The excluded names below
-        # are core glibc/libstdc++ pieces safe to assume are always present.
-        if: matrix.platform == 'linux'
-        run: |
-          mkdir -p src/mavspy/lib
-          libmavs=$(find mavs-build -iname "libmavs.so" | head -1)
-          cp "$libmavs" src/mavspy/lib/
-          ldd "$libmavs" | awk '{print $3}' | grep '^/' | while read -r dep; do
-            case "$(basename "$dep")" in
-              libc.so*|libm.so*|libpthread.so*|libdl.so*|librt.so*|libgcc_s.so*|libstdc++.so*|ld-linux*.so*|libutil.so*)
-                ;;
-              *)
-                cp "$dep" src/mavspy/lib/ ;;
-            esac
-          done
 
       - name: Set package version from tag
         shell: bash
