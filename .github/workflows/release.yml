@@ -63,45 +63,66 @@ jobs:
         shell: bash
         run: sed -i '/cmake_policy(SET CMP0063 OLD)/d' mavs-src/extern/tinyxml2/CMakeLists.txt
 
-      - name: Configure MAVS
-        shell: bash
-        run: >
-          cmake -S mavs-src -B mavs-build
-          -DCMAKE_POLICY_VERSION_MINIMUM=3.5
-          -DCMAKE_POLICY_DEFAULT_CMP0063=NEW
-          -DCMAKE_POLICY_FORCE_CMP0063=NEW
-          -DCMAKE_BUILD_TYPE=Release
-          -DBUILD_SHARED_LIBS=ON
-          -DBUILD_STATIC_LIBS=ON
-          -DMAVS_USE_EMBREE=ON
-          -DMAVS_USE_OMP=ON
-          -DMAVS_USE_MPI=OFF
-          -DMAVS_USE_CHRONO=OFF
-          -DBUILD_TESTING=OFF
-          -DMAVS_BUILD_EXAMPLES=OFF
-          -DMAVS_BUILD_UTILITIES=OFF
-
-      - name: Build MAVS (Linux)
-        # Building only the "mavs" target works correctly here: Make-
-        # generated builds resolve dependencies (e.g. reactphysics3d)
-        # correctly for any named target.
+      - name: Configure and build MAVS (Linux)
         if: matrix.platform == 'linux'
         shell: bash
-        run: cmake --build mavs-build --config Release --target mavs
+        run: |
+          cmake -S mavs-src -B mavs-build \
+            -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
+            -DCMAKE_POLICY_DEFAULT_CMP0063=NEW \
+            -DCMAKE_POLICY_FORCE_CMP0063=NEW \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DBUILD_SHARED_LIBS=ON \
+            -DBUILD_STATIC_LIBS=ON \
+            -DMAVS_USE_EMBREE=ON \
+            -DMAVS_USE_OMP=ON \
+            -DMAVS_USE_MPI=OFF \
+            -DMAVS_USE_CHRONO=OFF \
+            -DBUILD_TESTING=OFF \
+            -DMAVS_BUILD_EXAMPLES=OFF \
+            -DMAVS_BUILD_UTILITIES=OFF
+          # Building only the "mavs" target works correctly here: Make-
+          # generated builds resolve dependencies (e.g. reactphysics3d)
+          # correctly for any named target.
+          cmake --build mavs-build --config Release --target mavs
 
-      - name: Build MAVS (Windows)
-        # Unlike Linux, "--target mavs" on the Visual Studio generator does
-        # not reliably pull in reactphysics3d as a dependency (confirmed:
-        # reactphysics3d.lib was missing at link time even without
-        # --parallel, so it isn't just a parallel build race). Building the
-        # default target instead is proven to build reactphysics3d
-        # correctly; MAVS_BUILD_EXAMPLES/UTILITIES=OFF above keeps that
-        # from also pulling in everything under examples/ and utilities/.
-        # Kept serial (no --parallel): that combination previously raced
-        # reactphysics3d's own build against consumers linking against it.
+      - name: Configure and build MAVS (Windows)
+        # ReactPhysics3D has a known Windows-only build-order issue: a
+        # single configure+build leaves mavs.vcxproj linking against
+        # reactphysics3d.lib before that project has actually produced it,
+        # regardless of --target scope or parallelism (confirmed across
+        # several attempts). The proven workaround (used for local Windows
+        # builds of this project) is two full passes: build everything
+        # static first, then reconfigure for shared and build again -- the
+        # second pass's dependency graph resolves correctly.
         if: matrix.platform == 'windows'
         shell: bash
-        run: cmake --build mavs-build --config Release
+        run: |
+          common_flags=(
+            -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+            -DCMAKE_POLICY_DEFAULT_CMP0063=NEW
+            -DCMAKE_POLICY_FORCE_CMP0063=NEW
+            -DCMAKE_BUILD_TYPE=Release
+            -DMAVS_USE_EMBREE=ON
+            -DMAVS_USE_OMP=ON
+            -DMAVS_USE_MPI=OFF
+            -DMAVS_USE_CHRONO=OFF
+            -DBUILD_TESTING=OFF
+            -DMAVS_BUILD_EXAMPLES=OFF
+            -DMAVS_BUILD_UTILITIES=OFF
+          )
+
+          # Pass 1: static, scoped to just reactphysics3d itself -- the only
+          # thing this pass needs to accomplish -- so it can't fail due to
+          # mavs.dll (always SHARED regardless of this flag) hitting the
+          # same race in this pass too.
+          cmake -S mavs-src -B mavs-build "${common_flags[@]}" -DBUILD_SHARED_LIBS=OFF -DBUILD_STATIC_LIBS=ON
+          cmake --build mavs-build --config Release --target reactphysics3d
+
+          # Pass 2: shared, full default target -- this is the one that
+          # produces mavs.dll.
+          cmake -S mavs-src -B mavs-build "${common_flags[@]}" -DBUILD_SHARED_LIBS=ON -DBUILD_STATIC_LIBS=ON
+          cmake --build mavs-build --config Release
 
       - name: Copy native libraries into mavspy package (Windows)
         # Copied straight from the build tree by filename rather than a
