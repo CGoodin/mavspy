@@ -107,8 +107,21 @@ jobs:
           cmake --build mavs-build --config Release --target mavs
 
           rm -rf src/mavspy/lib && mkdir -p src/mavspy/lib
-          libmavs=$(find mavs-build -iname "libmavs.so" | head -1)
-          cp "$libmavs" src/mavspy/lib/
+          # Phase 1: bundle every shared library our own build produced,
+          # wherever in the build tree it landed. This has to happen BEFORE
+          # running ldd below: right after building, libmavs.so's sibling
+          # MAVS-built dependencies (reactphysics3d, tinyxml2, embree) are
+          # still scattered across separate build-tree subdirectories, so
+          # $ORIGIN can't resolve them yet and ldd silently reports them as
+          # "not found" -- which our old filter (grep '^/') then silently
+          # dropped instead of bundling. Copying everything self-built
+          # first, unconditionally, avoids relying on ldd to find them.
+          find mavs-build -iname "lib*.so*" -exec cp {} src/mavspy/lib/ \;
+
+          # Phase 2: now that all self-built libraries are co-located,
+          # $ORIGIN resolves correctly, so ldd can find the remaining
+          # genuinely-external system dependencies (jpeg, X11, etc.).
+          libmavs=src/mavspy/lib/libmavs.so
           ldd "$libmavs" | awk '{print $3}' | grep '^/' | while read -r dep; do
             case "$(basename "$dep")" in
               libc.so*|libm.so*|libpthread.so*|libdl.so*|librt.so*|ld-linux*.so*|libutil.so*)
