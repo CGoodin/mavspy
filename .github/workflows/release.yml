@@ -67,7 +67,10 @@ jobs:
         # build binaries portable across Linux distros. The library-bundling
         # (ldd-based, as before) has to happen inside this same container
         # too, since the actual libjpeg/libX11 files it finds only exist
-        # here, not on the ubuntu host.
+        # here, not on the ubuntu host. libstdc++/libgcc_s are bundled too
+        # (unlike glibc itself, safe/standard practice): this container's
+        # newer libstdc++ exports symbols (e.g. __cxa_call_terminate) an
+        # older target system's libstdc++.so.6 won't have.
         if: matrix.platform == 'linux'
         shell: bash
         run: |
@@ -99,7 +102,7 @@ jobs:
           cp "$libmavs" src/mavspy/lib/
           ldd "$libmavs" | awk '{print $3}' | grep '^/' | while read -r dep; do
             case "$(basename "$dep")" in
-              libc.so*|libm.so*|libpthread.so*|libdl.so*|librt.so*|libgcc_s.so*|libstdc++.so*|ld-linux*.so*|libutil.so*)
+              libc.so*|libm.so*|libpthread.so*|libdl.so*|librt.so*|ld-linux*.so*|libutil.so*)
                 ;;
               *)
                 cp "$dep" src/mavspy/lib/ ;;
