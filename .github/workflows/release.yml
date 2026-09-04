@@ -78,6 +78,14 @@ jobs:
           set -ex
           dnf install -y libX11-devel libjpeg-turbo-devel cmake gcc-c++ make
 
+          # -static-libstdc++/-static-libgcc: bundling libstdc++.so.6 wasn't
+          # enough on its own -- if Python (or something it already loaded,
+          # e.g. numpy) pulls in the system's libstdc++.so.6 first, the
+          # dynamic loader reuses that existing mapping and never even
+          # looks at libmavs.so's RPATH or our bundled copy, since a
+          # library with the same SONAME is already resident in the
+          # process. Statically linking removes the external dependency
+          # entirely rather than trying to win a race for it.
           cmake -S mavs-src -B mavs-build \
             -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
             -DCMAKE_POLICY_DEFAULT_CMP0063=NEW \
@@ -85,6 +93,7 @@ jobs:
             -DCMAKE_BUILD_TYPE=Release \
             -DBUILD_SHARED_LIBS=ON \
             -DBUILD_STATIC_LIBS=ON \
+            -DCMAKE_SHARED_LINKER_FLAGS="-static-libstdc++ -static-libgcc" \
             -DMAVS_USE_EMBREE=ON \
             -DMAVS_USE_OMP=ON \
             -DMAVS_USE_MPI=OFF \
