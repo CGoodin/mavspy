@@ -106,7 +106,7 @@ jobs:
           # correctly for any named target.
           cmake --build mavs-build --config Release --target mavs
 
-          mkdir -p src/mavspy/lib
+          rm -rf src/mavspy/lib && mkdir -p src/mavspy/lib
           libmavs=$(find mavs-build -iname "libmavs.so" | head -1)
           cp "$libmavs" src/mavspy/lib/
           ldd "$libmavs" | awk '{print $3}' | grep '^/' | while read -r dep; do
@@ -166,7 +166,7 @@ jobs:
         if: matrix.platform == 'windows'
         shell: bash
         run: |
-          mkdir -p src/mavspy/lib
+          rm -rf src/mavspy/lib && mkdir -p src/mavspy/lib
           find mavs-build -iname "mavs.dll" -exec cp {} src/mavspy/lib/ \;
           find mavs-build -iname "embree3.dll" -exec cp {} src/mavspy/lib/ \;
 
