@@ -123,6 +123,10 @@ jobs:
           # genuinely-external system dependencies (jpeg, X11, etc.).
           libmavs=src/mavspy/lib/libmavs.so
           ldd "$libmavs" | awk '{print $3}' | grep '^/' | while read -r dep; do
+            dest="src/mavspy/lib/$(basename "$dep")"
+            if [ -e "$dest" ] && [ "$dep" -ef "$dest" ]; then
+              continue
+            fi
             case "$(basename "$dep")" in
               libc.so*|libm.so*|libpthread.so*|libdl.so*|librt.so*|ld-linux*.so*|libutil.so*)
                 ;;
