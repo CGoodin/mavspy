@@ -10,7 +10,7 @@ Once installed, examples of scripts running different autonomous simulations can
 
 ## Installation
 
-Pre-built wheels for Linux (x86-64) and Windows (x86-64) are attached to each [GitHub Release](https://github.com/CGoodin/mavspy/releases). The wheel bundles all native MAVS libraries (`libmavs.so` / `mavs.dll`) and their dependencies — no separate MAVS build or install is required.
+Pre-built wheels for Linux (x86-64) and Windows (x86-64) are attached to each [GitHub Release](https://github.com/CGoodin/mavspy/releases). The wheel bundles all native MAVS libraries (`libmavs.so` / `mavs.dll`) and their dependencies - no separate MAVS build or install is required.
 
 **Requirement:** Python 3.8 or later.
 
@@ -143,7 +143,7 @@ The wheel sets an RPATH of `$ORIGIN/lib` so that Python can find the bundled lib
 
 ### Linux: `GLIBC_2.x not found`
 
-The wheels are built against glibc 2.28 (manylinux_2_28). Any Linux distribution shipped since approximately 2019 meets this requirement. If you are on an older system, you will need to build from source — see the [MAVS repository](https://github.com/Mississippi-State-University-OTM/MAVS).
+The wheels are built against glibc 2.28 (manylinux_2_28). Any Linux distribution shipped since approximately 2019 meets this requirement. If you are on an older system, you will need to build from source - see the [MAVS repository](https://github.com/Mississippi-State-University-OTM/MAVS).
 
 ### Windows: `The specified module could not be found` or `DLL load failed`
 
@@ -169,12 +169,12 @@ Make sure you download the wheel matching your OS:
 
 If you use MAVS for your research, please cite the following:
 
-- Hudson, C., Goodin, C., Miller, Z., Wheeler, W., & Carruth, D. (2020, August). Mississippi state university autonomous vehicle simulation library. In *Proceedings of the Ground Vehicle Systems Engineering and Technology Symposium* (pp. 11–13).
-- Goodin, C., Carruth, D. W., Dabbiru, L., Hudson, C. H., Cagle, L. D., Scherrer, N., ... & Jayakumar, P. (2022, June). Simulation-based testing of autonomous ground vehicles. In *Autonomous Systems: Sensors, Processing and Security for Ground, Air, Sea and Space Vehicles and Infrastructure 2022* (Vol. 12115, pp. 167–174). SPIE.
+ - Hudson, C., Goodin, C., Miller, Z., Wheeler, W., & Carruth, D. (2020, August). Mississippi state university autonomous vehicle simulation library. In *Proceedings of the Ground Vehicle Systems Engineering and Technology Symposium* (pp. 11 - 13).
+ - Goodin, C., Carruth, D. W., Dabbiru, L., Hudson, C. H., Cagle, L. D., Scherrer, N., ... & Jayakumar, P. (2022, June). Simulation-based testing of autonomous ground vehicles. In *Autonomous Systems: Sensors, Processing and Security for Ground, Air, Sea and Space Vehicles and Infrastructure 2022* (Vol. 12115, pp. 167 - 174). SPIE.
 
 ---
 
 ## Other Documentation
 
-- MAVS software documentation: https://mavs-documentation.readthedocs.io/en/latest/
-- MAVS API reference: https://cgoodin.gitlab.io/msu-autonomous-vehicle-simulator/
+ - MAVS software documentation: https://mavs-documentation.readthedocs.io/en/latest/
+ - MAVS API reference: https://cgoodin.gitlab.io/msu-autonomous-vehicle-simulator/
