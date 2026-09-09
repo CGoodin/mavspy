@@ -29,7 +29,7 @@ curl -L -O https://github.com/CGoodin/mavspy/releases/download/v1.0.33/mavspy-1.
 #### 2. Install the wheel
 
 ```bash
-pip install mavspy-1.0.7-py3-none-linux_x86_64.whl
+pip install mavspy-1.0.33-py3-none-linux_x86_64.whl
 ```
 
 You can also run ina a virtual environment:
@@ -37,7 +37,7 @@ You can also run ina a virtual environment:
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-pip install mavspy-1.0.7-py3-none-linux_x86_64.whl
+pip install mavspy-1.0.33-py3-none-linux_x86_64.whl
 ```
 
 #### 3. Verify the installation
@@ -63,7 +63,7 @@ curl -L -O https://github.com/CGoodin/mavspy/releases/download/v1.0.33/mavspy-1.
 Open a Command Prompt or PowerShell and run:
 
 ```powershell
-pip install mavspy-1.0.7-py3-none-win_amd64.whl
+pip install mavspy-1.0.33-py3-none-win_amd64.whl
 ```
 
 Or use a virtual environment:
@@ -71,7 +71,7 @@ Or use a virtual environment:
 ```powershell
 python -m venv .venv
 .venv\Scripts\activate
-pip install mavspy-1.0.7-py3-none-win_amd64.whl
+pip install mavspy-1.0.33-py3-none-win_amd64.whl
 ```
 
 #### 4. Verify the installation
