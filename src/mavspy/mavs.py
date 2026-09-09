@@ -45,7 +45,7 @@ from re import S
 import sys
 import json
 import time
-import mavs_lib_loader
+from mavspy import mavs_lib_loader
 
 mavs_lib = mavs_lib_loader.LoadMavsLib()
 mavs_data_path = mavs_lib_loader.GetMavsDataPath()

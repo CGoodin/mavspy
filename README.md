@@ -23,7 +23,7 @@ Pre-built wheels for Linux and Windows are attached to each [GitHub Release](htt
 From the [Releases page](https://github.com/CGoodin/mavspy/releases), download the file ending in `linux_x86_64.whl`. To get the most recent wheel on linux run:
 
 ```
-curl -L -O https://github.com/CGoodin/mavspy/releases/download/v1.0.31/mavspy-1.0.31-py3-none-linux_x86_64.whl
+curl -L -O https://github.com/CGoodin/mavspy/releases/download/v1.0.33/mavspy-1.0.33-py3-none-linux_x86_64.whl
 ```
 
 #### 2. Install the wheel
@@ -55,7 +55,7 @@ python -c "import mavspy; print('mavspy imported successfully')"
 From the [Releases page](https://github.com/CGoodin/mavspy/releases), download the file ending in `win_amd64.whl`, for example:
 
 ```
-curl -L -O https://github.com/CGoodin/mavspy/releases/download/v1.0.31/mavspy-1.0.31-py3-none-win_amd64.whl
+curl -L -O https://github.com/CGoodin/mavspy/releases/download/v1.0.33/mavspy-1.0.33-py3-none-win_amd64.whl
 ```
 
 #### 2. Install the wheel
