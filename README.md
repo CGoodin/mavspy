@@ -1,6 +1,6 @@
 # MavsPy
 
-This repo installs the Python interface to the [MSU Autonomous Vehicle Simulator](https://www.mavsim.org/).
+This repo installs the Python interface to the [MSU Autonomous Vehicle Simulator](https://www.mavsim.org/). It builds Python wheels for Linux and Windows that allow you to install MAVS with "pip".
 
 MAVS is a software library for simulating autonomous ground vehicles in off-road terrain. MAVS simulates the sensors, vehicle, and environment. It uses physics-based models to simulate camera, lidar, and radar interacting with environmental features such as rain, dust, and fog.
 
@@ -10,7 +10,7 @@ Once installed, examples of scripts running different autonomous simulations can
 
 ## Installation
 
-Pre-built wheels for Linux (x86-64) and Windows (x86-64) are attached to each [GitHub Release](https://github.com/CGoodin/mavspy/releases). The wheel bundles all native MAVS libraries (`libmavs.so` / `mavs.dll`) and their dependencies - no separate MAVS build or install is required.
+Pre-built wheels for Linux and Windows are attached to each [GitHub Release](https://github.com/CGoodin/mavspy/releases). The wheel bundles all native MAVS libraries (`libmavs.so` / `mavs.dll`) and their dependencies - no separate MAVS build or install is required.
 
 **Requirement:** Python 3.8 or later.
 
@@ -23,13 +23,7 @@ Pre-built wheels for Linux (x86-64) and Windows (x86-64) are attached to each [G
 From the [Releases page](https://github.com/CGoodin/mavspy/releases), download the file ending in `linux_x86_64.whl`. To get the most recent wheel on linux run:
 
 ```
-curl -L -O https://github.com/CGoodin/mavspy/releases/download/v1.0.27/mavspy-1.0.27-py3-none-linux_x86_64.whl
-```
-
-Or download it with `wget`:
-
-```bash
-wget https://github.com/CGoodin/mavspy/releases/download/v1.0.27/mavspy-1.0.27-py3-none-linux_x86_64.whl
+curl -L -O https://github.com/CGoodin/mavspy/releases/download/v1.0.31/mavspy-1.0.31-py3-none-linux_x86_64.whl
 ```
 
 #### 2. Install the wheel
@@ -38,7 +32,7 @@ wget https://github.com/CGoodin/mavspy/releases/download/v1.0.27/mavspy-1.0.27-p
 pip install mavspy-1.0.7-py3-none-linux_x86_64.whl
 ```
 
-Using a virtual environment is recommended:
+You can also run ina a virtual environment:
 
 ```bash
 python -m venv .venv
@@ -46,23 +40,7 @@ source .venv/bin/activate
 pip install mavspy-1.0.7-py3-none-linux_x86_64.whl
 ```
 
-#### 3. Install system dependencies
-
-The wheel bundles most native libraries, but a few lightweight system packages are required that are not bundled (X11 display and JPEG support):
-
-**Debian / Ubuntu:**
-```bash
-sudo apt-get install -y libx11-6 libjpeg62
-```
-
-**RHEL / CentOS / Fedora:**
-```bash
-sudo dnf install -y libX11 libjpeg-turbo
-```
-
-> **Headless / server environments:** If you are running on a machine with no display (e.g. a CI runner or SSH session), set the `DISPLAY` environment variable or use an offscreen renderer. MavsPy can generate sensor data and output files without a visible window in most use cases, but some visualisation features require a display.
-
-#### 4. Verify the installation
+#### 3. Verify the installation
 
 ```bash
 python -c "import mavspy; print('mavspy imported successfully')"
@@ -77,7 +55,7 @@ python -c "import mavspy; print('mavspy imported successfully')"
 From the [Releases page](https://github.com/CGoodin/mavspy/releases), download the file ending in `win_amd64.whl`, for example:
 
 ```
-curl -L -O https://github.com/CGoodin/mavspy/releases/download/v1.0.27/mavspy-1.0.27-py3-none-win_amd64.whl
+curl -L -O https://github.com/CGoodin/mavspy/releases/download/v1.0.31/mavspy-1.0.31-py3-none-win_amd64.whl
 ```
 
 #### 2. Install the wheel
@@ -88,21 +66,13 @@ Open a Command Prompt or PowerShell and run:
 pip install mavspy-1.0.7-py3-none-win_amd64.whl
 ```
 
-Using a virtual environment is recommended:
+Or use a virtual environment:
 
 ```powershell
 python -m venv .venv
 .venv\Scripts\activate
 pip install mavspy-1.0.7-py3-none-win_amd64.whl
 ```
-
-#### 3. Install the Visual C++ Redistributable
-
-The bundled `mavs.dll` requires the **Microsoft Visual C++ Redistributable for Visual Studio 2019 or later (x64)**. Most Windows machines already have this. If you see an error like `The specified module could not be found` when importing mavspy, install the redistributable from Microsoft:
-
-https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist
-
-Download and run the **x64** installer (`vc_redist.x64.exe`).
 
 #### 4. Verify the installation
 
@@ -129,6 +99,22 @@ Full working example scripts covering sensors, vehicles, and environments are av
 
 ## Troubleshooting
 
+### Linux: Missing system dependencies
+
+The wheel bundles most native libraries, but a few lightweight system packages are required that are not bundled (X11 display and JPEG support):
+
+**Debian / Ubuntu:**
+```bash
+sudo apt-get install -y libx11-6 libjpeg62
+```
+
+**RHEL / CentOS / Fedora:**
+```bash
+sudo dnf install -y libX11 libjpeg-turbo
+```
+
+> **Headless / server environments:** If you are running on a machine with no display (e.g. a CI runner or SSH session), set the `DISPLAY` environment variable or use an offscreen renderer. MavsPy can generate sensor data and output files without a visible window in most use cases, but some visualisation features require a display.
+
 ### Linux: `ImportError: libmavs.so: cannot open shared object file`
 
 The wheel sets an RPATH of `$ORIGIN/lib` so that Python can find the bundled libraries relative to the installed package. If this error appears:
@@ -146,6 +132,12 @@ The wheel sets an RPATH of `$ORIGIN/lib` so that Python can find the bundled lib
 The wheels are built against glibc 2.28 (manylinux_2_28). Any Linux distribution shipped since approximately 2019 meets this requirement. If you are on an older system, you will need to build from source - see the [MAVS repository](https://github.com/Mississippi-State-University-OTM/MAVS).
 
 ### Windows: `The specified module could not be found` or `DLL load failed`
+
+The bundled `mavs.dll` requires the **Microsoft Visual C++ Redistributable for Visual Studio 2019 or later (x64)**. Most Windows machines already have this. If you see an error like `The specified module could not be found` when importing mavspy, install the redistributable from Microsoft:
+
+https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist
+
+Download and run the **x64** installer (`vc_redist.x64.exe`).
 
 1. Install the [Visual C++ Redistributable (x64)](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist) as described above.
 2. Ensure you downloaded the `win_amd64.whl` wheel and are running a 64-bit Python interpreter:
