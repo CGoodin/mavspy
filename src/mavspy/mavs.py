@@ -1,17 +1,51 @@
-## @package mavs
+#---------------------------------------------------------------------------------#
+# MIT License
+#
+# Copyright (c) 2024 Mississippi State University
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+#---------------------------------------------------------------------------------#
+
+## @mainpage Python interface to the MSU Autonomous Vehicle Simulator (MAVS).
+#
+# API documentation for the MAVS python package.
+#
+# For access to the source code, see https://gitlab.com/cgoodin/msu-autonomous-vehicle-simulator.
+# 
+# For installation and user guide, see the wiki at https://gitlab.com/cgoodin/msu-autonomous-vehicle-simulator/wikis/home.
+
+## @package mavs_interface
 # This module provides classes and functions for interfacing with the MAVS library.
 #
 # Include it in your code like this:
-# from mavspy import mavs
+# import mavs_interfaces as mavs
 #
 # MAVS is natively in C++, with C interfaces written to make features accessible from python.
 
 import ctypes
+from genericpath import samefile
 import math
+from re import S
 import sys
 import json
 import time
-from mavspy import mavs_lib_loader
+import mavs_lib_loader
 
 mavs_lib = mavs_lib_loader.LoadMavsLib()
 mavs_data_path = mavs_lib_loader.GetMavsDataPath()
@@ -42,6 +76,22 @@ mavs_lib.TurnOffMavsSceneLabeling.restype = ctypes.c_void_p
 mavs_lib.TurnOffMavsSceneLabeling.argtypes = [ctypes.c_void_p]
 mavs_lib.GetSurfaceHeight.restype = ctypes.c_float
 mavs_lib.GetSurfaceHeight.argtypes = [ctypes.c_void_p,ctypes.c_float,ctypes.c_float]
+# ------ programmatic terrain functions ----------------------------------------------#
+mavs_lib.AddTrapezoidalFeature.restype = ctypes.c_void_p
+mavs_lib.AddTrapezoidalFeature.argtypes = [ctypes.c_float, ctypes.c_float, ctypes.c_float, ctypes.c_float, ctypes.c_void_p]
+mavs_lib.AddHoleFeature.restype = ctypes.c_void_p
+mavs_lib.AddHoleFeature.argtypes = [ctypes.c_float, ctypes.c_float, ctypes.c_float, ctypes.c_float, ctypes.c_float, ctypes.c_void_p]
+mavs_lib.AddRoughFeature.restype = ctypes.c_void_p
+mavs_lib.AddRoughFeature.argtypes = [ctypes.c_float, ctypes.c_void_p]
+mavs_lib.AddSlopedFeature.restype = ctypes.c_void_p
+mavs_lib.AddSlopedFeature.argtypes = [ctypes.c_float, ctypes.c_void_p]
+mavs_lib.AddParabolicFeature.restype = ctypes.c_void_p
+mavs_lib.AddParabolicFeature.argtypes = [ctypes.c_float, ctypes.c_void_p]
+mavs_lib.DeleteTerrainCreator.restype = ctypes.c_void_p
+mavs_lib.DeleteTerrainCreator.argtypes = [ctypes.c_void_p]
+mavs_lib.CreateSceneFromTerrain.restype = ctypes.c_void_p 
+mavs_lib.CreateSceneFromTerrain.argtypes = [ctypes.c_float, ctypes.c_float, ctypes.c_float, ctypes.c_float, ctypes.c_float, ctypes.c_void_p]
+mavs_lib.NewMavsTerrainCreator.restype = ctypes.c_void_p
 #------ Animations -------#
 mavs_lib.NewMavsAnimation.restype = ctypes.c_void_p
 mavs_lib.DeleteMavsAnimation.restype = ctypes.c_void_p
@@ -151,6 +201,8 @@ mavs_lib.GetObjectBoundingBox.argtypes = [ctypes.c_void_p, ctypes.c_int]
 mavs_lib.GetObjectBoundingBox.restype = ctypes.POINTER(ctypes.c_float)
 mavs_lib.GetObjectName.argtypes = [ctypes.c_void_p, ctypes.c_int]
 mavs_lib.GetObjectName.restype = ctypes.c_char_p
+mavs_lib.SetLocalOrigin.argtypes = [ctypes.c_void_p,ctypes.c_double, ctypes.c_double, ctypes.c_double]
+mavs_lib.SetLocalOrigin.restype = ctypes.c_void_p
 #------ Mavs Plotting utility ----------#
 mavs_lib.NewMavsPlotter.restype = ctypes.c_void_p 
 mavs_lib.DeleteMavsPlotter.restype = ctypes.c_void_p
@@ -164,6 +216,8 @@ mavs_lib.PlotTrajectory.argtypes =  [ctypes.c_void_p, ctypes.c_int, ctypes.POINT
 mavs_lib.AddPlotToTrajectory.restype = ctypes.c_void_p
 mavs_lib.AddPlotToTrajectory.argtypes =  [ctypes.c_void_p, ctypes.c_int, ctypes.POINTER(ctypes.c_float), ctypes.POINTER(ctypes.c_float)]
 #------ Vehicle functions -----#
+mavs_lib.ViewRp3dDebug.restype = ctypes.c_void_p
+mavs_lib.ViewRp3dDebug.argtypes = [ctypes.c_char_p]
 mavs_lib.NewMavsRp3dVehicle.restype = ctypes.c_void_p
 mavs_lib.LoadMavsRp3dVehicle.restype = ctypes.c_void_p
 mavs_lib.LoadMavsRp3dVehicle.argtypes = [ctypes.c_void_p, ctypes.c_char_p]
@@ -172,6 +226,8 @@ mavs_lib.SetMavsRp3dVehicleReloadVis.argtypes = [ctypes.c_void_p, ctypes.c_bool]
 mavs_lib.GetRp3dVehicleTireDeflection.restype = ctypes.c_float
 mavs_lib.GetRp3dTireNormalForce.argtypes = [ctypes.c_void_p, ctypes.c_int]
 mavs_lib.GetRp3dTireNormalForce.restype = ctypes.c_float
+mavs_lib.GetRp3dVehicleVegResistance.argtypes = [ctypes.c_void_p]
+mavs_lib.GetRp3dVehicleVegResistance.restype = ctypes.c_float
 mavs_lib.GetRp3dTireSlip.argtypes = [ctypes.c_void_p, ctypes.c_int]
 mavs_lib.GetRp3dTireSlip.restype = ctypes.c_float
 mavs_lib.GetRp3dTireSteeringAngle.argtypes = [ctypes.c_void_p, ctypes.c_int]
@@ -288,6 +344,8 @@ mavs_lib.SetMavsCameraShadows.restype = ctypes.c_void_p
 mavs_lib.SetMavsCameraShadows.argtypes = [ctypes.c_void_p,ctypes.c_bool]
 mavs_lib.SetMavsCameraBlur.restype = ctypes.c_void_p
 mavs_lib.SetMavsCameraBlur.argtypes = [ctypes.c_void_p,ctypes.c_bool]
+mavs_lib.SetMavsCameraTargetBrightness.restype = ctypes.c_void_p
+mavs_lib.SetMavsCameraTargetBrightness.argtypes = [ctypes.c_void_p,ctypes.c_float]
 mavs_lib.SetMavsCameraAntiAliasingFactor.restype = ctypes.c_void_p
 mavs_lib.SetMavsCameraAntiAliasingFactor.argtypes = [ctypes.c_void_p,ctypes.c_int]
 mavs_lib.SetMavsCameraEnvironmentProperties.restype = ctypes.c_void_p
@@ -357,6 +415,7 @@ mavs_lib.MavsLidarSetScanPattern.argtypes = [ctypes.c_float, ctypes.c_float, cty
                                              ctypes.c_float, ctypes.c_float, ctypes.c_float]
 mavs_lib.WriteMavsLidarToColorizedCloud.restype = ctypes.c_void_p
 mavs_lib.WriteMavsLidarToColorizedCloud.argtypes = [ctypes.c_void_p,ctypes.c_char_p]
+mavs_lib.SetLidarMinRange.argtypes = [ctypes.c_void_p,ctypes.c_float]
 mavs_lib.WriteMavsLidarToLabeledCloud.restype = ctypes.c_void_p
 mavs_lib.WriteMavsLidarToLabeledCloud.argtypes = [ctypes.c_void_p,ctypes.c_char_p]
 mavs_lib.WriteMavsLidarToPcd.restype = ctypes.c_void_p
@@ -443,9 +502,9 @@ mavs_lib.CreateSceneFromRandom.restype = ctypes.c_void_p
 mavs_lib.CreateSceneFromRandom.argtypes = [ctypes.c_float, ctypes.c_float,
                                            ctypes.c_float, ctypes.c_float,
                                            ctypes.c_float, ctypes.c_float,
-                                           ctypes.c_float, ctypes.c_float,
+                                           ctypes.c_float, ctypes.c_float, 
                                            ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p,
-                                           ctypes.c_float,  
+                                           ctypes.c_float, ctypes.c_int,
                                            ctypes.c_void_p, ctypes.c_char_p, ctypes.c_char_p]
 mavs_lib.CreateGapScene.restype = ctypes.c_void_p
 mavs_lib.CreateGapScene.argtypes = [ctypes.c_float, ctypes.c_float,
@@ -543,6 +602,22 @@ mavs_lib.GetOakDCamera.restype = ctypes.c_void_p
 mavs_lib.SetOakDCameraDisplayType.argtypes = [ctypes.c_void_p, ctypes.c_char_p] 
 mavs_lib.CameraDisplayOpen.argtypes = [ctypes.c_void_p]
 mavs_lib.CameraDisplayOpen.restype = ctypes.c_bool
+#-------------- MAVS Zed2i Sensor -----------------------------------------------------------------------#
+mavs_lib.NewMavsZed2iCamera.restype = ctypes.c_void_p
+mavs_lib.GetZed2iDepthBuffer.argtypes = [ctypes.c_void_p]
+mavs_lib.GetZed2iDepthBuffer.restype = ctypes.POINTER(ctypes.c_float)
+mavs_lib.GetZed2iDepthBufferSize.argtypes = [ctypes.c_void_p]
+mavs_lib.GetZed2iDepthBufferSize.restype = ctypes.c_int
+mavs_lib.GetZed2iImageBuffer.argtypes = [ctypes.c_void_p]
+mavs_lib.GetZed2iImageBuffer.restype = ctypes.POINTER(ctypes.c_float)
+mavs_lib.GetZed2iImageBufferSize.restype = ctypes.c_int
+mavs_lib.GetZed2iImageBufferSize.argtypes = [ctypes.c_void_p]
+mavs_lib.GetZed2iMaxRangeCm.restype = ctypes.c_float
+mavs_lib.GetZed2iMaxRangeCm.argtypes = [ctypes.c_void_p]
+mavs_lib.SetZed2iMaxRangeCm.argtypes = [ctypes.c_void_p, ctypes.c_float]
+mavs_lib.GetZed2iCamera.argtypes = [ctypes.c_void_p]
+mavs_lib.GetZed2iCamera.restype = ctypes.c_void_p
+mavs_lib.SetZed2iCameraDisplayType.argtypes = [ctypes.c_void_p, ctypes.c_char_p] 
 
 def PyStringToChar(py_string):
     """Convert a python string to a C char array.
@@ -550,6 +625,9 @@ def PyStringToChar(py_string):
     """
     b_string = py_string.encode('utf-8')
     return ctypes.c_char_p(b_string)
+
+def ViewRp3dDebug(fname):
+    mavs_lib.ViewRp3dDebug(PyStringToChar(fname))
 
 def AddRainToImage(fname,rate,add_drops=False,rho=1.0):
     """Add rain streaks to an existing image.
@@ -1804,6 +1882,8 @@ class MavsCamera(MavsSensor):
         """
         self.use_blur = blur
         mavs_lib.SetMavsCameraBlur(self.sensor,ctypes.c_bool(blur))
+    def SetTargetBrightness(self, target_brightness):
+        mavs_lib.SetMavsCameraTargetBrightness(self.sensor, ctypes.c_float(target_brightness))
     def SetAntiAliasingFactor(self,numsamples):
         """Set the camera anti-aliasing factor.
         
@@ -2006,6 +2086,122 @@ class MavsOakDCamera(MavsSensor):
         range_cm = (mr_cm / 255.0) * self.range_data[v][u][0]
         return range_cm/100.0
         
+class MavsZed2iCamera(MavsSensor):
+    def __init__(self):
+        self.sensor = mavs_lib.NewMavsZed2iCamera()
+        self.range_data = None
+        self.max_range_m = 12.0
+        self.width = 0
+        self.height = 0
+        self.depth = 0
+    def SetDisplayType(self, display_type):
+        """Set the camera display type
+
+        Parameters:
+        display_type (string): Can be "rgb", "range", or "both"
+        """
+        mavs_lib.SetZed2iCameraDisplayType(self.sensor, PyStringToChar(display_type))
+    def GetDimensions(self):
+        """Get the dimensions of the current camera frame.
+
+        Returns:
+        width (int): Width of the image in pixels.
+        height (int): Height of the image in pixels.
+        depth (int): Depth of the image, usually 3.
+        """
+        sens = mavs_lib.GetZed2iCamera(self.sensor)
+        self.width = mavs_lib.GetCameraBufferWidth(sens)
+        self.height = mavs_lib.GetCameraBufferHeight(sens)
+        self.depth = mavs_lib.GetCameraBufferDepth(sens)
+        return [self.width,self.height,self.depth]
+    def DisplayOpen(self):
+        sens = mavs_lib.GetZed2iCamera(self.sensor)
+        is_open = mavs_lib.CameraDisplayOpen(sens)
+        return is_open
+    def GetImage(self):
+        """Return a numpy array that can be converted directly to an image.
+        
+        Faster version recommended by Kasi Viswanth.
+
+        Example usage: 
+        from PIL import Image
+        img_data = cam.GetNumpyArray()
+        img = Image.fromarray(img_data, 'RGB')
+        img.show()
+
+        Returns:
+        img_data (numpy array of floats): The camera buffer.
+        """
+        try:
+            import numpy as np
+        except ImportError:
+            print("WARNING, TRIED TO GET MAVS IMAGE AS NUMPY ARRAY, BUT NUMPY IS NOT INSTALLED \n")
+            return None
+        pointbuff = mavs_lib.GetZed2iImageBuffer(self.sensor)
+        buffsize = mavs_lib.GetZed2iImageBufferSize(self.sensor)
+        buffer = pointbuff[:buffsize]
+        imagedim = self.GetDimensions()
+        buffer = np.asarray(buffer,dtype = 'float32')
+        shape = buffer.shape
+        buffer = buffer.ravel()
+        buffer[np.isnan(buffer)] = 0
+        buffer = buffer.reshape(shape)
+        img_data = np.zeros((imagedim[1], imagedim[0], imagedim[2]), dtype=np.uint8)
+        raw = np.reshape(buffer.astype('uint8'),(imagedim[2],imagedim[1], imagedim[0]))
+        img_data[:,:,0] = raw[0]
+        img_data[:,:,1] = raw[1]
+        img_data[:,:,2] = raw[2]
+        return img_data 
+    def GetDepthImage(self):
+        """Return a numpy array that can be converted directly to an image.
+        
+        Faster version recommended by Kasi Viswanth.
+
+        Example usage: 
+        from PIL import Image
+        img_data = cam.GetNumpyArray()
+        img = Image.fromarray(img_data, 'RGB')
+        img.show()
+
+        Returns:
+        img_data (numpy array of floats): The camera buffer.
+        """
+        try:
+            import numpy as np
+        except ImportError:
+            print("WARNING, TRIED TO GET MAVS IMAGE AS NUMPY ARRAY, BUT NUMPY IS NOT INSTALLED \n")
+            return None
+        pointbuff = mavs_lib.GetZed2iDepthBuffer(self.sensor)
+        buffsize = mavs_lib.GetZed2iDepthBufferSize(self.sensor)
+        buffer = pointbuff[:buffsize]
+        imagedim = self.GetDimensions()
+        buffer = np.asarray(buffer,dtype = 'float32')
+        shape = buffer.shape
+        buffer = buffer.ravel()
+        buffer[np.isnan(buffer)] = 0
+        buffer = buffer.reshape(shape)
+        img_data = np.zeros((imagedim[1], imagedim[0], imagedim[2]), dtype=np.uint8)
+        raw = np.reshape(buffer.astype('uint8'),(imagedim[2],imagedim[1], imagedim[0]))
+        img_data[:,:,0] = raw[0]
+        img_data[:,:,1] = raw[1]
+        img_data[:,:,2] = raw[2]
+        self.range_data = img_data
+        return self.range_data
+    def GetMaxRangeCm(self):
+        return mavs_lib.GetZed2iMaxRangeCm(self.sensor)
+    def SetMaxRangeCm(self, max_range_cm):
+        mavs_lib.SetZed2iMaxRangeCm(self.sensor, ctypes.c_float(max_range_cm))
+    def GetRangeAtPixelMeters(self, u, v):
+        u = int(u)
+        v = int(v)
+        if (u>=self.width or u<0 or v>=self.height or v<0):
+            return 0.0
+        if self.width<=0:
+            return 0.0
+        mr_cm = self.GetMaxRangeCm() # max_range in meters
+        range_cm = (mr_cm / 255.0) * self.range_data[v][u][0]
+        return range_cm/100.0
+
 
 class MavsLwirCamera(MavsCamera):
     def __init__(self, nx, ny, dx, dy, flen):
@@ -2228,6 +2424,14 @@ class MavsLidar(MavsSensor):
         fname (string): The output file name, including path and extension.
         """
         mavs_lib.SaveMavsLidarImage(self.sensor,PyStringToChar(fname))
+        
+    def SetMinRange(self,min_range):
+        """Set the minimum range of the lidar.
+
+        Parameters:
+        min_range (float): In meters.
+        """
+        mavs_lib.SetLidarMinRange(self.sensor,ctypes.c_float(min_range))
     def SaveProjectedLidarImage(self,fname):
         """Save the current lidar point cloud to a projected image.
 
@@ -2507,6 +2711,8 @@ class MavsRadar(MavsSensor):
         for i in range(0,num_targ):
             n=i*10
             target = MavsRadarTarget()
+            if (math.isnan(target_data[n])):
+                continue
             target.id = int(target_data[n])
             target.status = int(target_data[n+1])
             target.range = float(target_data[n+2])
@@ -2605,6 +2811,11 @@ class MavsEmbreeScene(MavsScene):
         """Constructor for a MavsEmbreeScene."""
         ## scene (void): Poiner to a MAVS Embree scene.
         self.scene = mavs_lib.NewEmbreeScene()
+        #self.scene = None
+    def __del__(self):
+        if (self.scene):
+            mavs_lib.DeleteEmbreeScene(self.scene)
+        self.scene = None
     def WriteStats(self,output_directory):
         mavs_lib.WriteEmbreeSceneStats(self.scene,PyStringToChar(output_directory))
     def Load(self,fname):
@@ -2624,6 +2835,67 @@ class MavsEmbreeScene(MavsScene):
         """
         mavs_lib.LoadEmbreeSceneWithRandomSeed(self.scene,PyStringToChar(fname))
 
+class MavsTerrainCreator(object):
+    def __init__(self):
+        self.terrain = mavs_lib.NewMavsTerrainCreator()
+        
+    def __del__(self):
+        if self.terrain:
+            mavs_lib.DeleteTerrainCreator(self.terrain)
+        self.terrain = None
+        
+    def AddTrapezoidalFeature(self, bottom_width, top_width, depth, x0):
+        """Add a trapezoidal feature
+
+        Parameters:
+        bottom_width (float): Width at apex/bottom of trapezoid
+        top_width (float): Width at base of trapezoid - ground level
+        depth (float): Depth of ditch in meters. Negative depth is a postive obstacle
+        x0 (float): X-coordinate of the center of the ditch/obstacle
+        """
+        mavs_lib.AddTrapezoidalFeature(ctypes.c_float(bottom_width), ctypes.c_float(top_width), ctypes.c_float(depth), ctypes.c_float(x0), self.terrain)
+    
+    def AddRoughFeature(self, rms):
+        """Add terrain roughness
+
+        Parameters:
+        rms (float): RMS roughness (meters)
+        """
+        mavs_lib.AddRoughFeature(ctypes.c_float(rms), self.terrain)
+        
+    def AddSlopeFeature(self, slope):
+        """Add constant slope in the x direction
+
+        Parameters:
+        slope (float): Fractional slope, 1.0 = 45 degrees
+        """
+        mavs_lib.AddSlopedFeature(ctypes.c_float(slope), self.terrain)
+        
+    def AddParabolicFeature(self, coeff):
+        """Add a parabolic shaped terrain, ie constantly increasing slope
+
+        Parameters:
+        coeff (float): Coefficient to the equation y = c*x^2
+        """
+        mavs_lib.AddParabolicFeature(ctypes.c_float(coeff), self.terrain)
+    
+    def AddHoleFeature(self, x, y, depth, diameter, steepness):
+        """Add a hole feature. Negative depth is an obstacle
+
+        Parameters:
+        x (float): X-coordinate of the hole center
+        y (float): y-coordinate of the hole center
+        depth (float): Depth of hole in meters. Negative depth is a postive obstacle
+        diameter (float): Diameter of the hole in meters
+        steepness (float): Parameter that controls the slope. Higher value is steeper sides and flatter bottom
+        """
+        mavs_lib.AddHoleFeature(ctypes.c_float(x), ctypes.c_float(y), ctypes.c_float(depth), ctypes.c_float(diameter), ctypes.c_float(steepness), self.terrain)
+    
+    def CreateMavsScenePointer(self, llx, lly, urx, ury, res):
+        """Create a scene using the added features and return a pointer to the MAVS scene"""
+        scene_ptr = mavs_lib.CreateSceneFromTerrain(ctypes.c_float(llx), ctypes.c_float(lly), ctypes.c_float(urx), ctypes.c_float(ury), ctypes.c_float(res), self.terrain)
+        return scene_ptr
+    
 class MavsRandomScene(MavsScene):
     """MavsRandomScene class.
     
@@ -2690,6 +2962,8 @@ class MavsRandomScene(MavsScene):
         self.pothole_locations = mavs_lib.NewPointList2D()
         ## type of surface roughness - can be "variable", "gaussian", or "perlin"
         self.surface_roughness_type = "perlin"
+        ## length of growth simulation in years
+        self.sim_length_years = 15
     def __del__(self):
         """MavsRandomScene destructor."""
         mavs_lib.DeleteEmbreeScene(self.scene)
@@ -2739,6 +3013,7 @@ class MavsRandomScene(MavsScene):
                                                     PyStringToChar(self.surface_roughness_type),
                                                     PyStringToChar(self.basename),
                                                     ctypes.c_float(self.plant_density),
+                                                    ctypes.c_int(self.sim_length_years),
                                                     self.pothole_locations,
                                                     PyStringToChar(self.eco_file),
                                                     PyStringToChar(self.output_directory))
@@ -2802,6 +3077,12 @@ class MavsEnvironment(object):
         self.second = 0
         # The scene to use
         self.scene = MavsEmbreeScene()
+        #Lat of local origin
+        self.local_origin_lat = 32.3033
+        #Lon of local origin
+        self.local_origin_lon = 90.8742
+        #Alt of local origin 
+        self.local_origin_alt = 73.152
     def __del__(self):
         """Destructor for a MavsEnvironment."""
         if (self.obj):
@@ -2833,8 +3114,8 @@ class MavsEnvironment(object):
             self.scene = scene
             mavs_lib.SetEnvironmentScene(self.obj, self.scene.scene)
         else:
-            print("WARNING, setting scene with pointer may cause seg fault if scene goes out of scope!")
-            sys.stdout.flush()
+            #print("WARNING, setting scene with pointer may cause seg fault if scene goes out of scope!")
+            #sys.stdout.flush()
             mavs_lib.SetEnvironmentScene(self.obj,scene)
     def GetVegDensityOnAGrid(self,ll,ur,res):
         """Get the vegetation density on a 3d grid
@@ -3120,6 +3401,8 @@ class MavsEnvironment(object):
         """
         mavs_lib.SetTimeSeconds(self.obj, ctypes.c_int(hour), ctypes.c_int(minute), ctypes.c_int(second))
         self.hour = hour
+        self.minute = minute
+        self.second = second
     def SetDate(self,year,month,day):
         """Set the date of the simulation.
 
@@ -3167,6 +3450,18 @@ class MavsEnvironment(object):
         """
         self.wind = wind
         mavs_lib.SetWind(self.obj, ctypes.c_float(wind[0]),ctypes.c_float(wind[1]))
+    def SetLocalOrigin(self, lat, lon, alt): 
+        """Set lat lon and alt of the local origin.
+
+        Parameters:
+        lat (float): latitude of the local origin 
+        lon (float): longitude of the local origin
+        alt (float): altitude of the local origin
+        """
+        mavs_lib.SetLocalOrigin(self.obj, ctypes.c_double(lat), ctypes.c_double(lon), ctypes.c_double(alt))
+        self.lat = lat 
+        self.long = lon
+        self.alt = alt
     def load_block(self,data):
         """Load environment parameters.
 
@@ -3478,7 +3773,14 @@ class MavsRp3d(MavsVehicle):
         """
         nf = mavs_lib.GetRp3dTireNormalForce(self.vehicle,ctypes.c_int(tire_id))
         return nf
+    def GetVegetationResistance(self):
+        """ Get the current resistive force on the vehicle from vegetation, Newtons
 
+        Returns:
+        vr (float): Vegetation resistance force in newtons.
+        """
+        vr = mavs_lib.GetRp3dVehicleVegResistance(self.vehicle)
+        return vr
     def GetTireForces(self, tire_id):
         """ Get the x-y-z force acting on the tire, in world coordinates
 
@@ -3623,7 +3925,7 @@ def GetQuatFromPoints(p,q):
     x = q[0]-p[0]
     y = q[1]-p[1]
     m = math.sqrt(x*x + y*y)
-    if (m==0):
+    if m==0.0:
         return [1.0, 0.0, 0.0, 0.0]
     x = x/m
     y = y/m
@@ -3945,7 +4247,8 @@ class MavsSimulation(object):
         self.UnloadScene()
         self.scenefile = scenefile
         self.LoadScene()
-        self.env.load_block(self.env_block)
+        if (self.env_block):
+            self.env.load_block(self.env_block)
         self.vehicle.UnloadVehicle()
         self.vehicle = MavsRp3d()
         startheight = mavs_lib.GetSurfaceHeight(self.scene.scene,ctypes.c_float(self.start_pos[0]),ctypes.c_float(self.start_pos[1])) + 3.0
@@ -4027,7 +4330,10 @@ class MavsSimulation(object):
         else:
             print("WARNING: NO POSE FILE GIVEN, SIMULATION MAY CRASH!!!")
         #---- Load the waypoints  -----
-        self.waypoints.Load(self.posefile)
+        if (self.posetype=="json"):
+            self.waypoints.LoadJson(self.posefile)
+        else:
+            self.waypoints.Load(self.posefile)
         # load the starting pose
         if "Starting Pose" in data:
             if "Position" in data["Starting Pose"]:
@@ -4286,3 +4592,41 @@ class MavsSimulation(object):
             },
             sort_keys=False,indent=2*' ') )
         f.close()
+        
+class PidController:
+    def __init__(self, kp, ki, kd, setpoint=0, output_limits=(0, 1)):
+        self.kp = kp
+        self.ki = ki
+        self.kd = kd
+        self.setpoint = setpoint
+        self.integral = 0.0
+        self.last_error = 0.0
+        self.last_time = time.time()
+        self.output_min, self.output_max = output_limits
+
+    def Update(self, measured_value):
+        current_time = time.time()
+        dt = current_time - self.last_time
+        if dt <= 0.0:
+            dt = 1e-16
+
+        error = self.setpoint - measured_value
+        derivative = (error - self.last_error) / dt
+
+        # Provisional integral update
+        new_integral = self.integral + error * dt
+
+        # Compute raw output
+        output = (self.kp * error + self.ki * new_integral + self.kd * derivative)
+
+        # Clamp output
+        clamped_output = max(self.output_min, min(self.output_max, output))
+
+        # Anti-windup: only update integral if output is not saturated
+        if clamped_output == output:
+            self.integral = new_integral
+
+        self.last_error = error
+        self.last_time = current_time
+
+        return clamped_output
