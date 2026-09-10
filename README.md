@@ -23,13 +23,13 @@ Pre-built wheels for Linux and Windows are attached to each [GitHub Release](htt
 From the [Releases page](https://github.com/CGoodin/mavspy/releases), download the file ending in `linux_x86_64.whl`. To get the most recent wheel on linux run:
 
 ```
-curl -L -O https://github.com/CGoodin/mavspy/releases/download/v1.0.34/mavspy-1.0.34-py3-none-linux_x86_64.whl
+curl -L -O https://github.com/CGoodin/mavspy/releases/download/v1.0.35/mavspy-1.0.35-py3-none-linux_x86_64.whl
 ```
 
 #### 2. Install the wheel
 
 ```bash
-pip install mavspy-1.0.34-py3-none-linux_x86_64.whl
+pip install mavspy-1.0.35-py3-none-linux_x86_64.whl
 ```
 
 You can also run ina a virtual environment:
@@ -37,7 +37,7 @@ You can also run ina a virtual environment:
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-pip install mavspy-1.0.34-py3-none-linux_x86_64.whl
+pip install mavspy-1.0.35-py3-none-linux_x86_64.whl
 ```
 
 #### 3. Verify the installation
@@ -55,7 +55,7 @@ python -c "import mavspy; print('mavspy imported successfully')"
 From the [Releases page](https://github.com/CGoodin/mavspy/releases), download the file ending in `win_amd64.whl`, for example:
 
 ```
-curl -L -O https://github.com/CGoodin/mavspy/releases/download/v1.0.34/mavspy-1.0.34-py3-none-win_amd64.whl
+curl -L -O https://github.com/CGoodin/mavspy/releases/download/v1.0.35/mavspy-1.0.35-py3-none-win_amd64.whl
 ```
 
 #### 2. Install the wheel
@@ -63,7 +63,7 @@ curl -L -O https://github.com/CGoodin/mavspy/releases/download/v1.0.34/mavspy-1.
 Open a Command Prompt or PowerShell and run:
 
 ```powershell
-pip install mavspy-1.0.34-py3-none-win_amd64.whl
+pip install mavspy-1.0.35-py3-none-win_amd64.whl
 ```
 
 Or use a virtual environment:
@@ -71,7 +71,7 @@ Or use a virtual environment:
 ```powershell
 python -m venv .venv
 .venv\Scripts\activate
-pip install mavspy-1.0.34-py3-none-win_amd64.whl
+pip install mavspy-1.0.35-py3-none-win_amd64.whl
 ```
 
 #### 4. Verify the installation
