@@ -170,3 +170,41 @@ If you use MAVS for your research, please cite the following:
 
  - MAVS software documentation: https://mavs-documentation.readthedocs.io/en/latest/
  - MAVS API reference: https://cgoodin.gitlab.io/msu-autonomous-vehicle-simulator/
+
+
+## Additional Info
+
+Releases are now built and published automatically by .github/workflows/release.yml as GitHub Release assets (Windows and Linux wheels), instead of being built locally and uploaded to PyPI.
+
+To cut a release:
+```
+git tag v1.0.xx
+git push origin v1.0.xx
+```
+The workflow checks out CGoodin/mavs, builds it from source on both windows-latest and ubuntu-latest, copies the resulting mavs.dll/embree3.dll (or libmavs.so/libembree3.so) into src/mavspy/lib/, sets the package version from the tag (no manual pyproject.toml edit needed), builds both wheels, and attaches them to a new GitHub Release.
+
+Note: src/mavspy/data/ (the curated data subset) is not touched by CI and is still maintained/committed by hand.
+
+### Old manual PyPI process (kept for reference; no longer used)
+```
+rm dist/*
+Update the version number in pyproject.toml
+python -m build
+# to upload to testpypi
+python -m twine upload --repository testpypi dist/*
+# to upload to main pypi repo:
+python -m twine upload dist/*
+```
+
+### Listing All Mesh Assets
+To list all the mesh assets in the mavspy package:
+```python
+import os
+import mavspy
+
+data_dir = os.path.join(os.path.dirname(mavspy.__file__), "data", "scenes", "meshes")
+
+for dirpath, _, filenames in os.walk(data_dir):
+    for f in sorted(filenames):
+        print(os.path.join(os.path.relpath(dirpath, data_dir), f))
+```
