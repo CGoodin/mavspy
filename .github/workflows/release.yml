@@ -220,8 +220,13 @@ jobs:
           pattern: mavspy-wheel-*
           merge-multiple: true
 
-      - name: Create GitHub Release
+      - name: Create GitHub Release (Windows wheel)
         uses: softprops/action-gh-release@v2
         with:
-          files: dist/*.whl
+          files: dist/*win*.whl
           generate_release_notes: true
+
+      - name: Upload Linux wheel to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*linux*.whl
