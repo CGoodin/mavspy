@@ -39,13 +39,11 @@
 # MAVS is natively in C++, with C interfaces written to make features accessible from python.
 
 import ctypes
-from genericpath import samefile
 import math
-from re import S
 import sys
 import json
 import time
-from mavspy import mavs_lib_loader
+import mavs_lib_loader
 
 mavs_lib = mavs_lib_loader.LoadMavsLib()
 mavs_data_path = mavs_lib_loader.GetMavsDataPath()
@@ -215,6 +213,22 @@ mavs_lib.PlotTrajectory.restype = ctypes.c_void_p
 mavs_lib.PlotTrajectory.argtypes =  [ctypes.c_void_p, ctypes.c_int, ctypes.POINTER(ctypes.c_float), ctypes.POINTER(ctypes.c_float)]
 mavs_lib.AddPlotToTrajectory.restype = ctypes.c_void_p
 mavs_lib.AddPlotToTrajectory.argtypes =  [ctypes.c_void_p, ctypes.c_int, ctypes.POINTER(ctypes.c_float), ctypes.POINTER(ctypes.c_float)]
+# ---- Tracked vehicle functions --- #
+mavs_lib.NewMavsTrackedVehicle.restype = ctypes.c_void_p
+mavs_lib.LoadTrackedVehicle.restype = ctypes.c_void_p
+mavs_lib.LoadTrackedVehicle.argtypes = [ctypes.c_void_p, ctypes.c_char_p]
+# mavs_lib.UpdateTrackedVehicle.restype = ctypes.c_void_p
+# mavs_lib.UpdateTrackedVehicle.argtypes = [ctypes.c_void_p,ctypes.c_void_p,ctypes.c_float,ctypes.c_float,ctypes.c_float]
+# mavs_lib.SetTrackedVehicleInitialPose.restype = ctypes.c_void_p
+# mavs_lib.SetTrackedVehicleInitialPose.argtypes = [ctypes.c_void_p,ctypes.c_float,ctypes.c_float]
+# mavs_lib.GetTrackedVehiclePosition.restype = ctypes.POINTER(ctypes.c_float)
+# mavs_lib.GetTrackedVehiclePosition.argtypes = [ctypes.c_void_p]
+# mavs_lib.GetTrackedVehicleOrientation.restype = ctypes.POINTER(ctypes.c_float)
+# mavs_lib.GetTrackedVehicleOrientation.argtypes = [ctypes.c_void_p]
+# mavs_lib.GetTrackedVehicleSpeed.restype = ctypes.c_float
+# mavs_lib.GetTrackedVehicleSpeed.argtypes = [ctypes.c_void_p]
+# mavs_lib.GetTrackedVehicleHeading.restype = ctypes.c_float
+# mavs_lib.GetTrackedVehicleHeading.argtypes = [ctypes.c_void_p]
 #------ Vehicle functions -----#
 mavs_lib.ViewRp3dDebug.restype = ctypes.c_void_p
 mavs_lib.ViewRp3dDebug.argtypes = [ctypes.c_char_p]
@@ -234,6 +248,8 @@ mavs_lib.GetRp3dTireSteeringAngle.argtypes = [ctypes.c_void_p, ctypes.c_int]
 mavs_lib.GetRp3dTireSteeringAngle.restype = ctypes.c_float
 mavs_lib.GetRp3dTireForces.argtypes = [ctypes.c_void_p, ctypes.c_int]
 mavs_lib.GetRp3dTireForces.restype = ctypes.POINTER(ctypes.c_float)
+mavs_lib.GetRp3dNumTires.argtypes = [ctypes.c_void_p]
+mavs_lib.GetRp3dNumTires.restype = ctypes.c_int
 mavs_lib.SetRp3dExternalForce.argtypes = [ctypes.c_void_p, ctypes.c_float, ctypes.c_float, ctypes.c_float]
 mavs_lib.GetRp3dLookTo.argtypes = [ctypes.c_void_p]
 mavs_lib.GetRp3dLookTo.restype = ctypes.POINTER(ctypes.c_float)
@@ -258,7 +274,7 @@ mavs_lib.LoadChronoVehicle.argtypes = [ctypes.c_void_p, ctypes.c_char_p]
 mavs_lib.GetChronoTireNormalForce.argtypes = [ctypes.c_void_p, ctypes.c_int]
 mavs_lib.GetChronoTireNormalForce.restype = ctypes.c_float
 mavs_lib.UpdateMavsVehicle.restype = ctypes.c_void_p
-mavs_lib.UpdateMavsVehicle.argtypes = [ctypes.c_void_p,ctypes.c_void_p,ctypes.c_float,ctypes.c_float,ctypes.c_float]
+mavs_lib.UpdateMavsVehicle.argtypes = [ctypes.c_void_p,ctypes.c_void_p,ctypes.c_float,ctypes.c_float,ctypes.c_float, ctypes.c_float]
 mavs_lib.DeleteMavsVehicle.restype = ctypes.c_void_p
 mavs_lib.DeleteMavsVehicle.argtypes = [ctypes.c_void_p]
 mavs_lib.GetMavsVehicleFullState.restype = ctypes.POINTER(ctypes.c_float)
@@ -3703,6 +3719,17 @@ class MavsVehicle(object):
             mavs_lib.DeleteMavsVehicle(self.vehicle)
         self.vehicle=None
 
+class MavsTrackedVehicle(MavsVehicle):
+    def __init__(self):
+        """MavsRp3dVehicle constructor."""
+        MavsVehicle.__init__(self)
+        self.vehicle = mavs_lib.NewMavsTrackedVehicle()
+    def Load(self, tracked_veh_file):
+        mavs_lib.LoadTrackedVehicle(self.vehicle,PyStringToChar(tracked_veh_file));
+    def SetInitialPose(self, x_init, y_init, yaw_init):
+         mavs_lib.SetMavsVehiclePosition(self.vehicle, ctypes.c_float(x_init), ctypes.c_float(y_init), ctypes.c_float(0.0))
+         mavs_lib.SetMavsVehicleHeading(self.vehicle, ctypes.c_float(yaw_init))
+
 class MavsRp3d(MavsVehicle):
     """MavsRp3d class.
     
@@ -3757,6 +3784,14 @@ class MavsRp3d(MavsVehicle):
         lt = mavs_lib.GetRp3dLookTo(self.vehicle)
         look_to = [lt[0],lt[1],lt[2]]
         return look_to
+    def GetNumTires(self):
+        """ Get the Number of tires on the vehicle
+
+        Returns:
+        num_tires (int): number of tires ont he vehicle.
+        """
+        num_tires = mavs_lib.GetRp3dNumTires(self.vehicle)
+        return num_tires
     def GetTireDeflection(self,i):
         """ Tire deflection as a fraction of section height.
 
