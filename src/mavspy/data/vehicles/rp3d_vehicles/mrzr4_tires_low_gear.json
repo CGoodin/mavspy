@@ -6,8 +6,10 @@
     "CG Lateral Offset": 0.0,
     "Dimensions": [ 3.5, 1.2, 0.9 ],
     "Drag Coefficient": 28.2,
-    "Collisions": true
+    "Collisions": false
   },
+
+  "Using Veg Forces": false,
 
   "Powertrain": {
     "Final Drive Ratio": 1.5,
@@ -31,7 +33,7 @@
       "Spring Length": 0.55,
       "Steered": true,
       "Powered": true,
-      "Max Steer Angle": 17.5,
+      "Max Steer Angle": 32.0,
       "Unsprung Mass": 34.8,
       "Tire": {
         "Spring Constant": 70000.0,
